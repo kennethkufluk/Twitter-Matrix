@@ -1,0 +1,5 @@
+Twitter Matrix
+
+Reads tweets from a twitter list, and displays them matrix-style, matching a background image.
+
+Change CHARSIZE for the size of the characters.  Bigger characters means fewer characters means more performance.
