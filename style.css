@@ -4,9 +4,9 @@ html {
 body {
   -webkit-transform-style: preserve-3d;
   overflow:hidden;
+  margin:0;
   height:100%;
   background:black;
-  font-size:200%
 }
 #grid {
   position:absolute;
@@ -14,10 +14,17 @@ body {
   left:0;
   color:#00ff00;
   font-family:monospace;
+  z-index:50;
+  letter-spacing:8px;
 }
 canvas {
-  display:none;
+  position:absolute;
+  top:0;
+  left:0;
+  z-index:100;
+}
+#grid div.row {
+  white-space:nowrap;
 }
 #grid span {
-  position:absolute;
 }

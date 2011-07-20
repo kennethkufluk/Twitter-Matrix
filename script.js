@@ -31,6 +31,7 @@ window.requestAnimFrame = (function(){
 
 function start() {
   var gridEl = document.getElementById('grid');
+  gridEl.style.fontSize = CHARSIZE + "px";
   createGrid();
   createOpacityFilter();
   var frameCount = 0;
@@ -39,7 +40,7 @@ function start() {
     if (frameCount % 2 == 1) {
       updateGrid();
     }
-    if (frameCount % 100 == 1) {
+    if (frameCount % 10 == 1) {
       showNextTweet();
     }
     requestAnimFrame(animloop, gridEl);
@@ -56,25 +57,19 @@ function createGrid() {
   for (var i=0;i<gridWidth;i++) {
     grid[i] = [];
     for (var j=0;j<gridHeight;j++) {
-      var $el = $('<span id="grid_'+i+'_'+j+'"></span>');
-      grid[i][j] = { opacity:0.2, bg_opacity:0.2, oldchar: '', char:' ', $el:$el }
-      $el.css({
-        left: i*CHARSIZE+'px',
-        top: j*CHARSIZE+'px'
-      });
-      $grid.append($el);
+      grid[i][j] = { opacity:0.2, char:'&nbsp;' }
     }
   }
 }
 function createOpacityFilter() {
   var img = new Image();
   img.onload = function() {
-    var canvas = $('<canvas></canvas>');
-    canvas.id = 'canvas';
-    canvas.get(0).width = gridWidth;
-    canvas.get(0).height = gridHeight;
-    $('body').append(canvas);
-    var ctx = canvas.get(0).getContext('2d');
+    var $canvas = $('<canvas></canvas>');
+    $canvas.id = 'canvas';
+    $canvas.get(0).width = gridWidth;
+    $canvas.get(0).height = gridHeight;
+    $('body').append($canvas);
+    var ctx = $canvas.get(0).getContext('2d');
     if (img.width > img.height) {
       var height = (img.height / img.width) * gridWidth;
       var offsetH = (gridHeight - height) / 2;
@@ -95,8 +90,19 @@ function createOpacityFilter() {
         b = data.data[datacell+2]/255;
         op = data.data[datacell + 3] /255;
         grid[i][j].bg_opacity = Math.max(op * (r+g+b) / 3, 0.2);
+        // redraw the pixel to create our mask
+        data.data[datacell] = data.data[datacell+1] = data.data[datacell+2] = 0; //black
+        data.data[datacell + 3] = Math.floor((1-(op * (r+g+b) / 3)) * 200);
       }
     }
+
+    // update the canvas
+    ctx.putImageData(data, 0, 0);
+
+    // now stretch the canvas to fill the screen
+    $canvas.width($(window).width());
+    $canvas.height($(window).height());
+
   }
   img.src = imageSrc;
 }
@@ -104,20 +110,7 @@ function createOpacityFilter() {
 function updateGrid() {
   // generateNoise();
   addGridTweets();
-  for (var i=0;i<gridWidth;i++) {
-    for (var j=gridHeight-1;j>=0;j--) {
-      var cell = grid[i][j];
-      if (cell.char != cell.oldchar) {
-        cell.$el[0].innerHTML = cell.char;
-        cell.oldchar = cell.char;
-      }
-      cell.$el[0].style.opacity = Math.min(cell.opacity*(1-BG_VISIBILITY) + cell.bg_opacity*BG_VISIBILITY, 1);
-      if (j>0) {
-        cell.opacity = grid[i][j-1].opacity;
-        cell.char = grid[i][j-1].char;
-      }
-    }
-  }
+  removeGridTweets();
 }
 function generateNoise() {
   for (var i=0;i<gridWidth;i++) {
@@ -145,24 +138,38 @@ function getRandomPlace() {
   return x;
 }
 function addGridTweets() {
+  var $row = $('<div class="row"></div>');
   for (var i=0;i<gridWidth;i++) {
-    if (!gridTweets[i]) continue;
-    var tweet = gridTweets[i];
-    var cell = grid[tweet.x][0];
-    if (tweet.y >= tweet.text.length) {
-      cell.char = ' ';
-      cell.opacity = 1;
-      tweet.y = 0;
+    var $el = $('<span></span>');
+    if (!gridTweets[i]) {
+      $el[0].innerHTML = '&nbsp;';
     } else {
-      cell.char = tweet.text[tweet.y];
-      if ("@#".indexOf(cell.char)!=-1) {
-        cell.opacity = 3;
+      var tweet = gridTweets[i];
+      var cell = grid[tweet.x][0];
+      if (tweet.y >= tweet.text.length) {
+        cell.char = '&nbsp;';
+        cell.opacity = 1;
+        tweet.y = 0;
       } else {
-        cell.opacity = 1 - (tweet.y / tweet.text.length);
+        cell.char = tweet.text[tweet.y];
+        if ("@#".indexOf(cell.char)!=-1) {
+          cell.opacity = 3;
+        } else {
+          cell.opacity = 1 - (tweet.y / tweet.text.length);
+        }
+        tweet.y++;
       }
-      tweet.y++;
+      $el[0].style.opacity = cell.opacity;
+      if (cell.char==' ') cell.char = '&nbsp;';
+      $el[0].innerHTML = cell.char;
     }
+    $row.append($el);
   }
+  $grid.prepend($row);
+}
+function removeGridTweets() {
+  var oldEl = $('div.row:eq('+gridHeight+')');
+  oldEl.remove();
 }
 
 function showNextTweet() {
