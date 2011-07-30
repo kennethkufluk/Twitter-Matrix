@@ -2,7 +2,6 @@ html {
   height:100%;
 }
 body {
-  -webkit-transform-style: preserve-3d;
   overflow:hidden;
   margin:0;
   height:100%;
