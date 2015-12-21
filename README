@@ -1,5 +1,7 @@
 Twitter Matrix
 
-Reads tweets from a twitter list, and displays them matrix-style, matching a background image.
+Reads tweets from a tweet array, and displays them matrix-style, matching a background image.
 
 Change CHARSIZE for the size of the characters.  Bigger characters means fewer characters means more performance.
+
+This is a pretty old project. I doubt this is the best approach to this problem nowadays, but it's still fun to watch.
